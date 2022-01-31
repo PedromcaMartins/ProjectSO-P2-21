@@ -4,6 +4,9 @@
 #include "common/common.h"
 #include <sys/types.h>
 
+#define MAX_SIZE_BUFFER 128
+#define MAX_SIZE_PATHNAME 40
+
 /*
  * Establishes a session with a TecnicoFS server.
  * Input:

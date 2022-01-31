@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "fcntl.h": "c",
+        "assert.h": "c",
+        "wait.h": "c",
+        "errno.h": "c",
+        "pipe_control_functions.h": "c",
+        "unistd.h": "c",
+        "stdbool.h": "c",
+        "operations.h": "c",
+        "tfs_api.h": "c",
+        "typeinfo": "c"
+    }
+}
