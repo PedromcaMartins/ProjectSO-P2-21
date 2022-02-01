@@ -38,5 +38,7 @@ int pipe_write_int(int phandle, int msg);
 ssize_t pipe_read_ssize_t(int phandle);
 int pipe_write_ssize_t(int phandle, ssize_t msg);
 
+size_t pipe_read_size_t(int phandle);
+int pipe_write_size_t(int phandle, size_t msg);
 
 #endif // PIPE_CONTROL_FUNCTIONS_H

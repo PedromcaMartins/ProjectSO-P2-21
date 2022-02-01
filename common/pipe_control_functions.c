@@ -148,3 +148,33 @@ int pipe_write_ssize_t(int phandle, ssize_t msg){
         return -1;
     return 0;
 }
+
+size_t pipe_read_size_t(int phandle){
+    void *buffer[sizeof(size_t)];
+
+    // write the int to the pipe
+    if (pipe_read(phandle, buffer, sizeof(size_t) + 1) == -1)
+        return -1;
+
+    // reads the buffer as an array of integers
+    size_t *buffer_size_t = (size_t *)buffer;
+
+    // returns amount written
+    return buffer_size_t[0];
+}
+
+int pipe_write_size_t(int phandle, size_t msg){
+    void *buffer[sizeof(size_t)];
+
+    // casts the buffer as an array and adds the integer to the array
+    size_t *buffer_size_t = (size_t *)buffer;
+    buffer_size_t[0] = msg;
+
+    // write the int to the pipe
+    size_t ret = write(phandle, buffer, sizeof(size_t));
+
+    // returns -1 if there is error
+    if (ret != (size_t)sizeof(size_t))
+        return -1;
+    return 0;
+}
