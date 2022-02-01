@@ -1,5 +1,5 @@
-#ifndef OPERATIONS_H
-#define OPERATIONS_H
+#ifndef OPEN_PIPE_H
+#define OPEN_PIPE_H
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -18,7 +18,7 @@ typedef struct {
 } session;
 
 //prototypes
-static inline bool valid_open_pipe(int pipe_file_handle);
+bool valid_open_pipe(int pipe_file_handle);
 void open_pipe_table_init();
 int add_to_open_pipe_table(int client_pipe, char *client_pipe_path);
 int remove_from_open_pipe_table(int session_id);
@@ -26,4 +26,4 @@ int get_phandle_from_open_pipe_table(int session_id);
 char* get_pathname_from_open_pipe_table(int session_id);
 
 
-#endif // OPERATIONS_H
+#endif // OPEN_PIPE_H

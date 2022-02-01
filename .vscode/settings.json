@@ -10,6 +10,7 @@
         "stdbool.h": "c",
         "operations.h": "c",
         "tfs_api.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "open_pipe.h": "c"
     }
 }

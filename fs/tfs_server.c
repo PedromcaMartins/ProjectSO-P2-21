@@ -1,4 +1,6 @@
 #include "operations.h"
+#include "open_pipe.h"
+#include "common/pipe_control_functions.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -48,7 +50,7 @@ int main(int argc, char **argv) {
     //initializes the server
     assert(server_init(server_pipename) != -1);
 
-    while (decode() != -1 && server_status == true) { sleep(0.5); }
+    while (decode() != -1 && server_status == true) { sleep(1); }
 
     printf("[INFO] Server destroyed\n");
 
@@ -144,10 +146,11 @@ int client_unmount(int session_id){
     char *client_pathname = get_pathname_from_open_pipe_table(session_id);
 
     // unregisters the client's session_id
-    if (remove_from_open_pipe_table(session_id) == -1)
+    if (remove_from_open_pipe_table(session_id) == -1){
         // if gone wrong, returns an error message
         pipe_write_int(client_pipe, -1);
         return -1;
+    }
 
     // sends SUCCESS message to the client
     if (pipe_write_int(client_pipe, 0) == -1)
@@ -179,42 +182,40 @@ int client_open(int session_id){
     printf("%d\n", flags);
 
     // TODO: adicinoar funcao tfs_open();
-    int phandle = 9;
-
-    // TODO: modificar mensagem de retorno
+    int fhandle = tfs_open(name, flags);
 
     // writes to the client SUCCESS!
     int client_pipe = get_phandle_from_open_pipe_table(session_id);
 
     // write the server's response
-    pipe_write_int(client_pipe, phandle);
-
+    pipe_write_int(client_pipe, fhandle);
+    return 0;
 }
 
 int client_close(int session_id){
     printf("%d\t", session_id);
 
-    int phandle = pipe_read_int(server_pipe);
-    printf("%d\n", phandle);
+    int fhandle = pipe_read_int(server_pipe);
+    printf("%d\n", fhandle);
 
-    // TODO: adicinoar funcao tfs_close();
-    int result = 0;
-    // TODO: modificar mensagem de retorno
+    int sucess = tfs_close(fhandle);
 
     // writes to the client SUCCESS!
     int client_pipe = get_phandle_from_open_pipe_table(session_id);
 
     // write the server's response
-    pipe_write_int(client_pipe, result);
+    pipe_write_int(client_pipe, sucess);
+    
+    return 0;
 }
 
 int client_write(int session_id){
     printf("%d\t", session_id);
 
-    int phandle = pipe_read_int(server_pipe);
-    printf("%d\t", phandle);
+    int fhandle = pipe_read_int(server_pipe);
+    printf("%d\t", fhandle);
 
-    size_t len = pipe_read_ssize_t(server_pipe);
+    size_t len = pipe_read_size_t(server_pipe);
     printf("%ld\t", len);
 
     char buffer[len];
@@ -224,31 +225,29 @@ int client_write(int session_id){
     ret++;
     printf("%s\n", buffer);
 
-    // TODO: adicinoar funcao tfs_write();
-    ssize_t res = ret;
-    // TODO: modificar mensagem de retorno
+    ssize_t res = tfs_write(fhandle, buffer, len);
 
     // writes to the client SUCCESS!
     int client_pipe = get_phandle_from_open_pipe_table(session_id);
 
     // write the server's response
     pipe_write_ssize_t(client_pipe, res);
+    
+    return 0;
 }
 
 int client_read(int session_id){
     printf("%d\t", session_id);
 
-    int phandle = pipe_read_int(server_pipe);
-    printf("%d\t", phandle);
+    int fhandle = pipe_read_int(server_pipe);
+    printf("%d\t", fhandle);
 
-    size_t len = pipe_read_ssize_t(server_pipe);
+    size_t len = pipe_read_size_t(server_pipe);
     printf("%ld\n", len);
 
     // TODO: adicinoar funcao tfs_read();
-    char buffer[128] = "Mensagem para escrever";
-    ssize_t res = len;
-
-    // TODO: modificar mensagem de retorno
+    char buffer[len];
+    ssize_t res = tfs_read(fhandle, buffer, len);
 
     // writes to the client SUCCESS!
     int client_pipe = get_phandle_from_open_pipe_table(session_id);
@@ -257,7 +256,9 @@ int client_read(int session_id){
     pipe_write_ssize_t(client_pipe, res);
     if (res == -1)
         return -1;
-    pipe_write(client_pipe, buffer, res);
+    pipe_write(client_pipe, buffer, (size_t)(res));
+    
+    return 0;
 }
 
 int decode(){

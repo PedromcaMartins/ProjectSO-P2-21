@@ -94,7 +94,7 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
         return -1;
     if (pipe_write_int(server_pipe, fhandle) == -1)
         return -1;
-    if (pipe_write_ssize_t(server_pipe, len) == -1)
+    if (pipe_write_size_t(server_pipe, len) == -1)
         return -1;
     if (pipe_write(server_pipe, buffer, len) == -1)
         return -1;
@@ -110,14 +110,14 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
         return -1;
     if (pipe_write_int(server_pipe, fhandle) == -1)
         return -1;
-    if (pipe_write_ssize_t(server_pipe, len) == -1)
+    if (pipe_write_size_t(server_pipe, len) == -1)
         return -1;
 
     // returns the server's response
-    int read = pipe_read_ssize_t(client_pipe);
+    ssize_t read = pipe_read_ssize_t(client_pipe);
     if (read == -1)
         return -1;
-    pipe_read(client_pipe, buffer, read);
+    pipe_read(client_pipe, buffer, (size_t)(read));
     printf("%s\n", (char *)buffer);
 
     return read;

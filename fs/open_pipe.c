@@ -1,4 +1,4 @@
-#include "fs/open_pipe.h"
+#include "open_pipe.h"
 
 // global variables
 // session_id corresponds to the index of said client's pipe on the table
