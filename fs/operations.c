@@ -6,12 +6,18 @@
 #include <string.h>
 
 static pthread_mutex_t single_global_lock;
+pthread_cond_t cond_noOpenFiles;
+bool stop_opening_files = false;
+int open_files = 0;
 
 int tfs_init() {
     state_init();
 
     if (pthread_mutex_init(&single_global_lock, 0) != 0)
         return -1;
+
+    // initiate operation's global conditions
+    pthread_cond_init(&cond_noOpenFiles, NULL);
 
     /* create root inode */
     int root = inode_create(T_DIRECTORY);
@@ -27,6 +33,10 @@ int tfs_destroy() {
     if (pthread_mutex_destroy(&single_global_lock) != 0) {
         return -1;
     }
+
+    // destroy operation's global conditions
+    pthread_cond_destroy(&cond_noOpenFiles);
+
     return 0;
 }
 
@@ -35,7 +45,13 @@ static bool valid_pathname(char const *name) {
 }
 
 int tfs_destroy_after_all_closed() {
-    /* TO DO: implement this */
+    pthread_mutex_lock(&single_global_lock);
+    stop_opening_files = true; //para a abertura de files
+
+    while (open_files != 0) // TODO: #55 adicionar condicao
+        pthread_cond_wait(&cond_noOpenFiles, &single_global_lock); // TODO: #56 adicionar trinco
+
+    return tfs_destroy();
     return 0;
 }
 
@@ -62,6 +78,9 @@ int tfs_lookup(char const *name) {
 static int _tfs_open_unsynchronized(char const *name, int flags) {
     int inum;
     size_t offset;
+
+    if (stop_opening_files)
+        return -1;
 
     inum = _tfs_lookup_unsynchronized(name);
     if (inum >= 0) {
@@ -116,6 +135,10 @@ int tfs_open(char const *name, int flags) {
     if (pthread_mutex_lock(&single_global_lock) != 0)
         return -1;
     int ret = _tfs_open_unsynchronized(name, flags);
+
+    if (ret != -1)
+        open_files++;
+
     if (pthread_mutex_unlock(&single_global_lock) != 0)
         return -1;
 
@@ -126,6 +149,12 @@ int tfs_close(int fhandle) {
     if (pthread_mutex_lock(&single_global_lock) != 0)
         return -1;
     int r = remove_from_open_file_table(fhandle);
+    if (r != -1){
+        open_files--;
+
+        //signal cond_noOpenFiles
+        pthread_cond_signal(&cond_noOpenFiles);
+    }
     if (pthread_mutex_unlock(&single_global_lock) != 0)
         return -1;
 
@@ -228,3 +257,4 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len) {
 
     return ret;
 }
+
