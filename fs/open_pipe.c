@@ -6,7 +6,7 @@ static session open_pipe_table[MAX_SESSION_IDS];
 static bool free_open_pipe_table[MAX_SESSION_IDS];
 
 // functions
-static inline bool valid_open_pipe(int pipe_file_handle) {
+bool valid_open_pipe(int pipe_file_handle) {
     return pipe_file_handle >= 0 && pipe_file_handle < MAX_SESSION_IDS;
 }
 
