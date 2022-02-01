@@ -79,14 +79,12 @@ int server_init(char const *server_pipe_path) {
 }
 
 int server_destroy(){
-    // TODO: add function shutdown_after_all_closed
     // TODO: add functionality to wait until all pipes are closed except one
     // TODO: every error until here is reported back to the client w/ -1
 
     server_status = false;
 
-    return 0;
-
+    return tfs_destroy_after_all_closed();
 }
 
 int client_destroy(int session_id){
@@ -269,12 +267,12 @@ int decode(){
     int command = atoi(buffer);
 
     switch (command){
-    case 1:
+    case TFS_OP_CODE_MOUNT:
         printf("CASE 1\n");
         client_mount();
         break;
 
-    case 2:
+    case TFS_OP_CODE_UNMOUNT:
         printf("CASE 2\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -282,7 +280,7 @@ int decode(){
         client_unmount(session_id);
         break;
 
-    case 3:
+    case TFS_OP_CODE_OPEN:
         printf("CASE 3\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -290,7 +288,7 @@ int decode(){
         client_open(session_id);
         break;
 
-    case 4:
+    case TFS_OP_CODE_CLOSE:
         printf("CASE 4\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -298,7 +296,7 @@ int decode(){
         client_close(session_id);
         break;
 
-    case 5:
+    case TFS_OP_CODE_WRITE:
         printf("CASE 5\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -306,7 +304,7 @@ int decode(){
         client_write(session_id);
         break;
 
-    case 6:
+    case TFS_OP_CODE_READ:
         printf("CASE 6\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -314,7 +312,7 @@ int decode(){
         client_read(session_id);
         break;
 
-    case 7:
+    case TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED:
         printf("CASE 7\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
