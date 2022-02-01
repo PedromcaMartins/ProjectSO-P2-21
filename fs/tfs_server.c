@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
 int server_init(char const *server_pipe_path) {
     // creates open pipe table
     open_pipe_table_init();
+    if (tfs_init() == -1)
+        return -1;
 
     // creates server pipe (self)
     if (pipe_init(server_pipe_path) == -1)
@@ -181,7 +183,6 @@ int client_open(int session_id){
     int flags = pipe_read_int(server_pipe);
     printf("%d\n", flags);
 
-    // TODO: adicinoar funcao tfs_open();
     int fhandle = tfs_open(name, flags);
 
     // writes to the client SUCCESS!
