@@ -154,7 +154,7 @@ size_t pipe_read_size_t(int phandle){
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(size_t) + 1) == -1)
-        return -1;
+        return (size_t)(-1);
 
     // reads the buffer as an array of integers
     size_t *buffer_size_t = (size_t *)buffer;
@@ -171,7 +171,7 @@ int pipe_write_size_t(int phandle, size_t msg){
     buffer_size_t[0] = msg;
 
     // write the int to the pipe
-    size_t ret = write(phandle, buffer, sizeof(size_t));
+    ssize_t ret = write(phandle, buffer, sizeof(size_t));
 
     // returns -1 if there is error
     if (ret != (size_t)sizeof(size_t))
