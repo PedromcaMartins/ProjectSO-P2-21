@@ -51,8 +51,9 @@ int tfs_destroy_after_all_closed() {
     while (open_files != 0) // TODO: #55 adicionar condicao
         pthread_cond_wait(&cond_noOpenFiles, &single_global_lock); // TODO: #56 adicionar trinco
 
+    pthread_mutex_unlock(&single_global_lock);
+
     return tfs_destroy();
-    return 0;
 }
 
 int _tfs_lookup_unsynchronized(char const *name) {
