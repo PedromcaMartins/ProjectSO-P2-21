@@ -9,20 +9,23 @@
 
 int main(int argc, char **argv) {
 
-    char *str = "AAA!";
+    printf("%d\n", argc);
+
+    char str[5] = "AAA!";
     char *path = "/f1";
     char buffer[40];
 
     int f;
     ssize_t r;
-
+/*
     if (argc < 3) {
         printf("You must provide the following arguments: 'client_pipe_path "
                "server_pipe_path'\n");
         return 1;
     }
-
-    assert(tfs_mount(argv[1], argv[2]) == 0);
+*/
+    /*assert(tfs_mount(argv[1], argv[2]) == 0);*/
+    assert(tfs_mount("/tmp/client", argv[1]) == 0);
 
     f = tfs_open(path, TFS_O_CREAT);
     assert(f != -1);
@@ -39,6 +42,8 @@ int main(int argc, char **argv) {
     assert(r == strlen(str));
 
     buffer[r] = '\0';
+    printf("buffer: %ld\n", strlen(buffer));
+    printf("str: %ld\n", strlen(str));
     assert(strcmp(buffer, str) == 0);
 
     assert(tfs_close(f) != -1);
