@@ -79,10 +79,10 @@ int server_init(char const *server_pipe_path) {
 }
 
 int server_destroy(){
+    server_status = false;
+
     // TODO: add functionality to wait until all pipes are closed except one
     // TODO: every error until here is reported back to the client w/ -1
-
-    server_status = false;
 
     return tfs_destroy_after_all_closed();
 }
