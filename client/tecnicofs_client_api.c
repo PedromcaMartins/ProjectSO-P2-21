@@ -4,7 +4,7 @@
 // global variables
 int server_pipe;
 int client_pipe;
-int session_id;
+int session_id = -1;
 
 int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     // creates it's pipe (self)
