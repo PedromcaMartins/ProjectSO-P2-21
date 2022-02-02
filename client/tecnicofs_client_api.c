@@ -84,7 +84,7 @@ int tfs_open(char const *name, int flags){
     offset += sizeof(int);
 
     pipe_write_buffer(pipe_buffer, offset, name, MAX_SIZE_PATHNAME);
-    offset += sizeof(char) * MAX_SIZE_PATHNAME;
+    offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
     pipe_write_int_buffer(pipe_buffer, offset, flags);
     offset += sizeof(int);
@@ -136,7 +136,7 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
     offset += sizeof(size_t);
 
     pipe_write_buffer(pipe_buffer, offset, buffer, len);
-    offset += sizeof(char) * len;
+    offset += sizeof(char) * (len - 1);
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
