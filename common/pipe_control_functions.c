@@ -174,7 +174,41 @@ int pipe_write_size_t(int phandle, size_t msg){
     ssize_t ret = write(phandle, buffer, sizeof(size_t));
 
     // returns -1 if there is error
-    if (ret != (size_t)sizeof(size_t))
+    if (ret != (ssize_t)sizeof(ssize_t))
         return -1;
     return 0;
+}
+
+void pipe_write_buffer(void *buffer, size_t offset, void const *str, size_t len) {
+    len--;
+
+    memcpy(buffer + offset, str, len);
+}
+
+// TODO: #9 improve the writting
+void pipe_write_int_buffer(void *buffer, size_t offset, int msg){
+    // creates an array and adds the int to the array
+    int temp[1];
+    temp[0] = msg;
+
+    // saves the array containing the msg to the buffer
+    memcpy(buffer + offset, temp, sizeof(int));
+}
+
+void pipe_write_size_t_buffer(void *buffer, size_t offset, size_t msg){
+    // creates an array and adds the size_t to the array
+    size_t temp[1];
+    temp[0] = msg;
+
+    // saves the array containing the msg to the buffer
+    memcpy(buffer + offset, temp, sizeof(size_t));
+}
+
+void pipe_write_ssize_t_buffer(void *buffer, size_t offset, ssize_t msg){
+    // creates an array and adds the ssize_t to the array
+    ssize_t temp[1];
+    temp[0] = msg;
+
+    // saves the array containing the msg to the buffer
+    memcpy(buffer + offset, temp, sizeof(ssize_t));
 }
