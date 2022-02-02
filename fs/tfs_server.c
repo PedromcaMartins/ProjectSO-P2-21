@@ -1,6 +1,7 @@
 #include "operations.h"
 #include "open_pipe.h"
 #include "common/pipe_control_functions.h"
+#include "common/common.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -14,7 +15,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define MAX_BUFFER_SIZE 1024
 #define MAX_SIZE_PATHNAME 40
 
 // variaveis globais
@@ -262,9 +262,7 @@ int client_read(int session_id){
 
 int decode(){
     int session_id;
-    char buffer[10];
-    pipe_read(server_pipe, buffer, sizeof(char)+1);
-    int command = atoi(buffer);
+    int command = pipe_read_int(server_pipe);
 
     switch (command){
     case TFS_OP_CODE_MOUNT:
