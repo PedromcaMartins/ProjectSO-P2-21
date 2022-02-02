@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     char file_pathname[MAX_SIZE_PATHNAME] = "/f1";
     char message[MAX_SIZE_PATHNAME] = "Mensagem teste :(";
     int fhandle = tfs_open(file_pathname, 1);
+    printf("fhandle: %d\n", fhandle);
     assert(fhandle != -1);
 
     ssize_t res = tfs_write(fhandle, message, MAX_SIZE_PATHNAME);
@@ -39,9 +40,14 @@ int main(int argc, char **argv) {
 
     assert(res == MAX_SIZE_PATHNAME);
 
-    assert(tfs_read(fhandle, message, MAX_SIZE_PATHNAME) == MAX_SIZE_PATHNAME);
+    char buffer[MAX_SIZE_PATHNAME];
 
-    assert(tfs_close(fhandle) != -1);
+    assert(tfs_read(fhandle, buffer, MAX_SIZE_PATHNAME) == MAX_SIZE_PATHNAME);
+    printf("message %s\n", buffer);
+
+    int resul = tfs_close(fhandle);
+    printf("result: %d\n", resul);
+    assert(resul != -1);
 
     sleep(2);
 
