@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+//TODO: #5 FIX este teste
 
 /*  This test is similar to test1.c from the 1st exercise.
     The main difference is that this one explores the
