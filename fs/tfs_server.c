@@ -221,7 +221,7 @@ int client_write(int session_id){
     ssize_t ret = pipe_read(server_pipe, buffer, len);
     if (ret == 0)
         return -1;
-    ret++;
+    buffer[ret] = 0;
     printf("%s\n", buffer);
 
     ssize_t res = tfs_write(fhandle, buffer, len);
@@ -232,7 +232,7 @@ int client_write(int session_id){
 
     // write the server's response
     pipe_write_ssize_t(client_pipe, res);
-    
+
     return 0;
 }
 
