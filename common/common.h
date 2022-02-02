@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define MAX_BUFFER_SIZE 2048
+
 /* tfs_open flags */
 enum {
     TFS_O_CREAT = 0b001,

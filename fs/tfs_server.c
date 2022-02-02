@@ -1,6 +1,7 @@
 #include "operations.h"
 #include "open_pipe.h"
 #include "common/pipe_control_functions.h"
+#include "common/common.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -14,7 +15,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define MAX_BUFFER_SIZE 1024
 #define MAX_SIZE_PATHNAME 40
 
 // variaveis globais
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     //initializes the server
     assert(server_init(server_pipename) != -1);
 
-    while (decode() != -1 && server_status == true) { sleep(1); }
+    while (decode() != -1 && server_status == true) {}
 
     printf("[INFO] Server destroyed\n");
 
@@ -79,14 +79,12 @@ int server_init(char const *server_pipe_path) {
 }
 
 int server_destroy(){
-    // TODO: add function shutdown_after_all_closed
+    server_status = false;
+
     // TODO: add functionality to wait until all pipes are closed except one
     // TODO: every error until here is reported back to the client w/ -1
 
-    server_status = false;
-
-    return 0;
-
+    return tfs_destroy_after_all_closed();
 }
 
 int client_destroy(int session_id){
@@ -265,17 +263,15 @@ int client_read(int session_id){
 
 int decode(){
     int session_id;
-    char buffer[10];
-    pipe_read(server_pipe, buffer, sizeof(char)+1);
-    int command = atoi(buffer);
+    int command = pipe_read_int(server_pipe);
 
     switch (command){
-    case 1:
+    case TFS_OP_CODE_MOUNT:
         printf("CASE 1\n");
         client_mount();
         break;
 
-    case 2:
+    case TFS_OP_CODE_UNMOUNT:
         printf("CASE 2\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -283,7 +279,7 @@ int decode(){
         client_unmount(session_id);
         break;
 
-    case 3:
+    case TFS_OP_CODE_OPEN:
         printf("CASE 3\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -291,7 +287,7 @@ int decode(){
         client_open(session_id);
         break;
 
-    case 4:
+    case TFS_OP_CODE_CLOSE:
         printf("CASE 4\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -299,7 +295,7 @@ int decode(){
         client_close(session_id);
         break;
 
-    case 5:
+    case TFS_OP_CODE_WRITE:
         printf("CASE 5\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -307,7 +303,7 @@ int decode(){
         client_write(session_id);
         break;
 
-    case 6:
+    case TFS_OP_CODE_READ:
         printf("CASE 6\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
@@ -315,7 +311,7 @@ int decode(){
         client_read(session_id);
         break;
 
-    case 7:
+    case TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED:
         printf("CASE 7\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
