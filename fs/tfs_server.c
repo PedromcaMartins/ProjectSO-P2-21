@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     //initializes the server
     assert(server_init(server_pipename) != -1);
 
-    while (decode() != -1 && server_status == true) { sleep(1); }
+    while (decode() != -1 && server_status == true) {}
 
     printf("[INFO] Server destroyed\n");
 
