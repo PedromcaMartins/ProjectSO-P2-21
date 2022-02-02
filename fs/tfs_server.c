@@ -159,7 +159,7 @@ int client_unmount(int session_id){
     // closes the client's pipe, resuming the execution it's code
     if (pipe_close(client_pipe) == -1)
         return -1;
-    
+
     // destroys the client's pipe
     if(pipe_destroy(client_pathname) == -1)
         return -1;

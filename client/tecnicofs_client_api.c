@@ -84,7 +84,7 @@ int tfs_open(char const *name, int flags){
     offset += sizeof(int);
 
     pipe_write_buffer(pipe_buffer, offset, name, MAX_SIZE_PATHNAME);
-    offset += sizeof(char) * MAX_SIZE_PATHNAME;
+    offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
     pipe_write_int_buffer(pipe_buffer, offset, flags);
     offset += sizeof(int);
