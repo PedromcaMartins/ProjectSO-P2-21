@@ -119,6 +119,7 @@ int tfs_close(int fhandle){
 }
 
 ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
+    len++;
     // creates the buffer to write to the server's pipe
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
@@ -136,7 +137,7 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
     offset += sizeof(size_t);
 
     pipe_write_buffer(pipe_buffer, offset, buffer, len);
-    offset += sizeof(char) * (len - 1);
+    offset += sizeof(char) * len;
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;

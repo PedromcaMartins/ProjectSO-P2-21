@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
     printf("%d\n", argc);
 
-    char str[5] = "AAA!";
+    char *str = "AAA!";
     char *path = "/f1";
     char buffer[40];
 
