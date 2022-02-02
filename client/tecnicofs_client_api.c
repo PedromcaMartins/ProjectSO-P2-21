@@ -1,10 +1,9 @@
-#include "common/pipe_control_functions.h"
 #include "tecnicofs_client_api.h"
 
 // global variables
 int server_pipe;
 int client_pipe;
-int session_id;
+int session_id = -1;
 
 int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     // creates it's pipe (self)
@@ -16,11 +15,18 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     if (server_pipe == -1)
         return -1;
 
-    // requests the server to mount the client to the server using the server's pipe
-    if (pipe_write(server_pipe, "1", 2) == -1)
-        return -1;
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
 
-    if (pipe_write(server_pipe, client_pipe_path, MAX_SIZE_PATHNAME) == -1)
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_MOUNT);
+    offset += sizeof(int);
+
+    pipe_write_buffer(pipe_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME);
+    offset += sizeof(char) * MAX_SIZE_PATHNAME;
+
+    // requests the server to mount the client to the server using the server's pipe
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
 
     // open self pipe for reading
@@ -36,12 +42,18 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
 }
 
 int tfs_unmount(){
-    //resquests the server to unmount the client
-    if(pipe_write(server_pipe, "2", 2) == -1)
-        return -1;
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
 
-    // gives the session id to the server
-    if (pipe_write_int(server_pipe, session_id) == -1)
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_UNMOUNT);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    offset += sizeof(int);
+
+    //resquests the server to unmount the client
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
 
     // closes the server's pipe
@@ -61,14 +73,24 @@ int tfs_unmount(){
 
 // TODO: o name que a funcao recebe tem que ter capacidade de 40?
 int tfs_open(char const *name, int flags){
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_OPEN);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    offset += sizeof(int);
+
+    pipe_write_buffer(pipe_buffer, offset, name, MAX_SIZE_PATHNAME);
+    offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
+
+    pipe_write_int_buffer(pipe_buffer, offset, flags);
+    offset += sizeof(int);
+
     // writes to the server the the requests
-    if (pipe_write(server_pipe, "3", 2) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, session_id) == -1)
-        return -1;
-    if (pipe_write(server_pipe, name, MAX_SIZE_PATHNAME) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, flags) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
 
     // returns the server's response
@@ -76,13 +98,22 @@ int tfs_open(char const *name, int flags){
 }
 
 int tfs_close(int fhandle){
-    if (pipe_write(server_pipe, "4", 2) == -1)
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_CLOSE);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, fhandle);
+    offset += sizeof(int);
+
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
-    if (pipe_write_int(server_pipe, session_id) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, fhandle) == -1)
-        return -1;
-    
+
     // returns the server's response
     return pipe_read_int(client_pipe);
 }
@@ -105,13 +136,23 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
 }
 
 ssize_t tfs_read(int fhandle, void *buffer, size_t len){
-    if (pipe_write(server_pipe, "6", 2) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, session_id) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, fhandle) == -1)
-        return -1;
-    if (pipe_write_size_t(server_pipe, len) == -1)
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_READ);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, fhandle);
+    offset += sizeof(int);
+
+    pipe_write_size_t_buffer(pipe_buffer, offset, len);
+    offset += sizeof(size_t);
+
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
 
     // returns the server's response
@@ -119,15 +160,22 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
     if (read == -1)
         return -1;
     pipe_read(client_pipe, buffer, (size_t)(read));
-    printf("%s\n", (char *)buffer);
 
     return read;
 }
 
 int tfs_shutdown_after_all_closed(){
-    if (pipe_write(server_pipe, "7", 2) == -1)
-        return -1;
-    if (pipe_write_int(server_pipe, session_id) == -1)
+    // creates the buffer to write to the server's pipe
+    void *pipe_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED);
+    offset += sizeof(int);
+
+    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    offset += sizeof(int);
+
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
         return -1;
 
     // returns the server's response

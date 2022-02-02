@@ -174,7 +174,7 @@ int pipe_write_size_t(int phandle, size_t msg){
     ssize_t ret = write(phandle, buffer, sizeof(size_t));
 
     // returns -1 if there is error
-    if (ret != (size_t)sizeof(size_t))
+    if (ret != (ssize_t)sizeof(ssize_t))
         return -1;
     return 0;
 }
