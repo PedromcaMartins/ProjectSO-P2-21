@@ -170,7 +170,6 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
     if (read == -1)
         return -1;
     pipe_read(client_pipe, buffer, (size_t)(read));
-    printf("%s\n", (char *)buffer);
 
     return read;
 }
