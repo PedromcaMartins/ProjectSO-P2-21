@@ -35,10 +35,17 @@ int pipe_destroy(char const *pipe_pathname);
 int pipe_read_int(int phandle);
 int pipe_write_int(int phandle, int msg);
 
+size_t pipe_read_size_t(int phandle);
+int pipe_write_size_t(int phandle, size_t msg);
+
 ssize_t pipe_read_ssize_t(int phandle);
 int pipe_write_ssize_t(int phandle, ssize_t msg);
 
-size_t pipe_read_size_t(int phandle);
-int pipe_write_size_t(int phandle, size_t msg);
+
+// writes to the buffer
+void pipe_write_buffer(void *buffer, size_t offset, void const *str, size_t len);
+void pipe_write_int_buffer(void *buffer, size_t offset, int msg);
+void pipe_write_size_t_buffer(void *buffer, size_t offset, size_t msg);
+void pipe_write_ssize_t_buffer(void *buffer, size_t offset, ssize_t msg);
 
 #endif // PIPE_CONTROL_FUNCTIONS_H

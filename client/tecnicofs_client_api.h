@@ -2,9 +2,9 @@
 #define CLIENT_API_H
 
 #include "common/common.h"
+#include "common/pipe_control_functions.h"
 #include <sys/types.h>
 
-#define MAX_SIZE_BUFFER 128
 #define MAX_SIZE_PATHNAME 40
 
 /*

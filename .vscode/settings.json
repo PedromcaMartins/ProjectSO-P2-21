@@ -11,6 +11,7 @@
         "operations.h": "c",
         "tfs_api.h": "c",
         "typeinfo": "c",
-        "open_pipe.h": "c"
+        "open_pipe.h": "c",
+        "types.h": "c"
     }
 }
