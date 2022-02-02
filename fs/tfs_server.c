@@ -227,6 +227,7 @@ int client_write(int session_id){
     printf("%s\n", buffer);
 
     ssize_t res = tfs_write(fhandle, buffer, len);
+    res--;
 
     // writes to the client SUCCESS!
     int client_pipe = get_phandle_from_open_pipe_table(session_id);

@@ -88,6 +88,7 @@ int tfs_close(int fhandle){
 }
 
 ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
+    len++;
     if (pipe_write(server_pipe, "5", 2) == -1)
         return -1;
     if (pipe_write_int(server_pipe, session_id) == -1)
