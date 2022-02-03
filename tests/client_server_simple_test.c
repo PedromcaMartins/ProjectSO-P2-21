@@ -26,7 +26,8 @@ int main(int argc, char **argv) {
     }
 */
     /*assert(tfs_mount(argv[1], argv[2]) == 0);*/
-    assert(tfs_mount("/tmp/client", argv[1]) == 0);
+    printf("%s\n", argv[1]);
+    assert(tfs_mount(argv[1], "/tmp/tfs_server") == 0);
 
     f = tfs_open(path, TFS_O_CREAT);
     assert(f != -1);
@@ -35,6 +36,8 @@ int main(int argc, char **argv) {
     assert(r == strlen(str));
 
     assert(tfs_close(f) != -1);
+
+    sleep(2);
 
     f = tfs_open(path, 0);
     assert(f != -1);

@@ -18,7 +18,7 @@
 #include "common/common.h"
 #include "operations.h"
 
-int client_mount(void *input);
+int client_mount(int session_id, void *input);
 int client_unmount(int session_id);
 int client_open(int session_id, void *input);
 int client_close(int session_id, void *input);

@@ -38,37 +38,37 @@ void *thread_execute(void *arg){
 			switch(op_code){
 
 			case TFS_OP_CODE_MOUNT:
-				printf("THREAD CASE 1\n");
-				client_mount(s->buffer);
+				printf("THREAD %d CASE 1\n", s->session_id);
+				client_mount(s->session_id, s->buffer);
 				break;
 
 			case TFS_OP_CODE_UNMOUNT:
-				printf("THREAD CASE 2\n");
+				printf("THREAD %d CASE 2\n", s->session_id);
 				client_unmount(s->session_id);
 				break;
 
 			case TFS_OP_CODE_OPEN:
-				printf("THREAD CASE 3\n");
+				printf("THREAD %d CASE 3\n", s->session_id);
 				client_open(s->session_id, s->buffer);
 				break;
 
 			case TFS_OP_CODE_CLOSE:
-				printf("THREAD CASE 4\n");
+				printf("THREAD %d CASE 4\n", s->session_id);
 				client_close(s->session_id, s->buffer);
 				break;
 
 			case TFS_OP_CODE_WRITE:
-				printf("THREAD CASE 5\n");
+				printf("THREAD %d CASE 5\n", s->session_id);
 				client_write(s->session_id, s->buffer);
 				break;
 
 			case TFS_OP_CODE_READ:
-				printf("THREAD CASE 6\n");
+				printf("THREAD %d CASE 6\n", s->session_id);
 				client_read(s->session_id, s->buffer);
 				break;
 
 			case TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED:
-				printf("THREAD CASE 7\n");
+				printf("THREAD %d CASE 7\n", s->session_id);
 				client_destroy(s->session_id);
 				break;
 

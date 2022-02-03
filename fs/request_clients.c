@@ -1,7 +1,7 @@
 #include "request_clients.h"
 
 // char client_pipe_path[MAX_SIZE_PATHNAME]
-int client_mount(void *input){
+int client_mount(int session_id, void *input){
     size_t offset = sizeof(int);
     // reads the client's pathname from the server's pipe
     char client_pipe_path[MAX_SIZE_PATHNAME];
@@ -14,12 +14,7 @@ int client_mount(void *input){
         return -1;
 
     // tries to save the client's pipe
-    int session_id = add_to_session_table(client_pipe, client_pipe_path);
-    if (session_id == -1){
-        // the aren't more sessions avaiable
-        pipe_write_int(client_pipe, -1);
-        return -1;
-    }
+    add_to_session(session_id, client_pipe, client_pipe_path);
 
     // writes to the client the amount of bytes read
     if (pipe_write_int(client_pipe, session_id) == -1)

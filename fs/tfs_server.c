@@ -21,7 +21,7 @@ int request_thread_mount(){
     buffer_write_char(thread_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME - 1);
     offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
-    int session_id = thread_mount();
+    int session_id = add_to_session_table();
     if (session_id == -1){
         int client_pipe = pipe_open(client_pipe_path, O_WRONLY);
         if (client_pipe == -1)
