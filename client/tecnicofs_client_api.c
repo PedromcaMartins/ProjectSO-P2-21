@@ -20,12 +20,9 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     size_t offset = 0;
 
     buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_MOUNT);
-    printf("OP_CODE: %d\n", buffer_read_int(pipe_buffer, offset));
     offset += sizeof(int);
 
     buffer_write_char(pipe_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME);
-    //char *temp[MAX_BUFFER_SIZE];
-
     offset += sizeof(char) * MAX_SIZE_PATHNAME;
 
     // requests the server to mount the client to the server using the server's pipe
