@@ -328,7 +328,10 @@ int decode(){
             server_destroy();
         client_destroy(session_id);
         break;
-
+    case TFS_OP_CODE_SERVER_PIPE_CLOSED:
+        server_destroy();
+        return -1;
+        break;
     default:
         return -1;
         break;
