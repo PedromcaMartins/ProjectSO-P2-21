@@ -1,7 +1,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define MAX_SIZE_PATHNAME 40
 #define MAX_BUFFER_SIZE 2048
+
+typedef enum { FREE = 0, TAKEN = 1 } allocation_state_t;
 
 /* tfs_open flags */
 enum {
