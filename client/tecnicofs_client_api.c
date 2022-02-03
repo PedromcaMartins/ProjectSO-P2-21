@@ -19,10 +19,13 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_MOUNT);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_MOUNT);
+    printf("OP_CODE: %d\n", buffer_read_int(pipe_buffer, offset));
     offset += sizeof(int);
 
-    pipe_write_buffer(pipe_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME);
+    buffer_write_char(pipe_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME);
+    //char *temp[MAX_BUFFER_SIZE];
+
     offset += sizeof(char) * MAX_SIZE_PATHNAME;
 
     // requests the server to mount the client to the server using the server's pipe
@@ -46,10 +49,10 @@ int tfs_unmount(){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_UNMOUNT);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_UNMOUNT);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
     //resquests the server to unmount the client
@@ -77,16 +80,16 @@ int tfs_open(char const *name, int flags){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_OPEN);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_OPEN);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    pipe_write_buffer(pipe_buffer, offset, name, MAX_SIZE_PATHNAME);
+    buffer_write_char(pipe_buffer, offset, name, MAX_SIZE_PATHNAME);
     offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
-    pipe_write_int_buffer(pipe_buffer, offset, flags);
+    buffer_write_int(pipe_buffer, offset, flags);
     offset += sizeof(int);
 
     // writes to the server the the requests
@@ -102,13 +105,13 @@ int tfs_close(int fhandle){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_CLOSE);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_CLOSE);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, fhandle);
+    buffer_write_int(pipe_buffer, offset, fhandle);
     offset += sizeof(int);
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
@@ -124,19 +127,19 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_WRITE);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_WRITE);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, fhandle);
+    buffer_write_int(pipe_buffer, offset, fhandle);
     offset += sizeof(int);
 
-    pipe_write_size_t_buffer(pipe_buffer, offset, len);
+    buffer_write_size_t(pipe_buffer, offset, len);
     offset += sizeof(size_t);
 
-    pipe_write_buffer(pipe_buffer, offset, buffer, len);
+    buffer_write_char(pipe_buffer, offset, buffer, len);
     offset += sizeof(char) * len;
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
@@ -151,16 +154,16 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_READ);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_READ);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, fhandle);
+    buffer_write_int(pipe_buffer, offset, fhandle);
     offset += sizeof(int);
 
-    pipe_write_size_t_buffer(pipe_buffer, offset, len);
+    buffer_write_size_t(pipe_buffer, offset, len);
     offset += sizeof(size_t);
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
@@ -180,10 +183,10 @@ int tfs_shutdown_after_all_closed(){
     void *pipe_buffer[MAX_BUFFER_SIZE];
     size_t offset = 0;
 
-    pipe_write_int_buffer(pipe_buffer, offset, TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED);
+    buffer_write_int(pipe_buffer, offset, TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED);
     offset += sizeof(int);
 
-    pipe_write_int_buffer(pipe_buffer, offset, session_id);
+    buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
