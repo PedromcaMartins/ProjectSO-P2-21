@@ -1,19 +1,5 @@
 #include "tfs_server.h"
 
-// prototipos
-int server_init(char const *server_pipe_path);
-int server_destroy();
-int decode();
-
-int request_thread_mount();
-int request_thread_unmount(int session_id);
-int request_thread_open(int session_id);
-int request_thread_close(int session_id);
-int request_thread_write(int session_id);
-int request_thread_read(int session_id);
-int request_thread_destroy(int session_id);
-void cntrlc_server();
-
 int request_thread_mount(){
     // creates the buffer to write to the thread's buffer
     void *thread_buffer[MAX_BUFFER_SIZE];
@@ -211,11 +197,10 @@ int main(int argc, char **argv) {
     server_pipename = argv[1];
     printf("Starting TecnicoFS server with pipe called %s\n", server_pipename);
 
-    
     //initializes the server
     assert(server_init(server_pipename) != -1);
-  
-    signal (SIGINT, cntrlc_server);
+
+    signal(SIGINT, cntrlc_server);
     signal(SIGPIPE, SIG_IGN);
 
     while (decode() != -1 && server_status == true) {}
