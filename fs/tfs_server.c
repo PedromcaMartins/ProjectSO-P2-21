@@ -34,6 +34,7 @@ int client_close(int session_id);
 int client_write(int session_id);
 int client_read(int session_id);
 int client_destroy(int session_id);
+void cntrlc_server();
 
 
 int main(int argc, char **argv) {
@@ -49,6 +50,9 @@ int main(int argc, char **argv) {
     
     //initializes the server
     assert(server_init(server_pipename) != -1);
+
+    signal (SIGINT, cntrlc_server);
+    signal(SIGPIPE, SIG_IGN);
 
     while (decode() != -1 && server_status == true) {}
 
@@ -259,6 +263,12 @@ int client_read(int session_id){
     pipe_write(client_pipe, buffer, (size_t)(res));
     
     return 0;
+}
+
+void cntrlc_server(){
+    printf("Destroying_server\n");
+    server_destroy();
+    exit(0);
 }
 
 int decode(){
