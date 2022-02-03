@@ -53,15 +53,15 @@ int tfs_unmount(){
     offset += sizeof(int);
 
     //resquests the server to unmount the client
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
-        return -1;
-
-    // closes the server's pipe
-    if(pipe_close(server_pipe) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
         return -1;
 
     // reads the server's response
     if (pipe_read_int(client_pipe) == -1)
+        return -1;
+
+    // closes the server's pipe
+    if(pipe_close(server_pipe) == -1)
         return -1;
 
     // closes the client's pipe
@@ -90,7 +90,7 @@ int tfs_open(char const *name, int flags){
     offset += sizeof(int);
 
     // writes to the server the the requests
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
         return -1;
 
     // returns the server's response
@@ -111,7 +111,7 @@ int tfs_close(int fhandle){
     buffer_write_int(pipe_buffer, offset, fhandle);
     offset += sizeof(int);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
         return -1;
 
     // returns the server's response
@@ -163,7 +163,7 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
     buffer_write_size_t(pipe_buffer, offset, len);
     offset += sizeof(size_t);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
         return -1;
 
     // returns the server's response
@@ -186,7 +186,7 @@ int tfs_shutdown_after_all_closed(){
     buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
         return -1;
 
     // returns the server's response
