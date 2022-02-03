@@ -2,6 +2,7 @@
 #define STATE_H
 
 #include "config.h"
+#include "common/common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +27,6 @@ typedef struct {
     int i_data_block;
     /* in a real FS, more fields would exist here */
 } inode_t;
-
-typedef enum { FREE = 0, TAKEN = 1 } allocation_state_t;
 
 /*
  * Open file entry (in open file table)

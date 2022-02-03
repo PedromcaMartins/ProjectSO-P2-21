@@ -1,8 +1,10 @@
 #include "session.h"
+#include "thread.h"
 
 // global variables
 // session_id corresponds to the index of said client's pipe on the table
 static session session_table[MAX_SESSION_IDS];
+static pthread_t thread_table[MAX_SESSION_IDS];
 static bool free_session_table[MAX_SESSION_IDS];
 
 // functions
@@ -11,8 +13,23 @@ bool valid_session(int pipe_phandle) {
 }
 
 void session_table_init(){
+    void *input[sizeof(int)];
+
     for (int i = 0; i < MAX_SESSION_IDS; i++) {
+        session_init(i);
         free_session_table[i] = FREE;
+
+        printf("IN MAIN: Creating thread %d.\n", i);
+        buffer_write_int(input, 0, i);
+        pthread_create(&thread_table[i], NULL, thread_execute, input);
+    }
+}
+
+void session_table_destroy(){
+    for (int i = 0; i < MAX_SESSION_IDS; i++) {
+        thread_status(i, THREAD_STATUS_DESTROY, NULL);
+        pthread_join(thread_table[i], NULL);
+        session_destroy(i);
     }
 }
 
@@ -41,7 +58,17 @@ int remove_from_session_table(int session_id){
 
     free_session_table[session_id] = FREE;
 
+    thread_status(session_id, THREAD_STATUS_SLEEP, NULL);
+
     return 0;
+}
+
+session *get_session(int session_id){
+    if (!valid_session(session_id)) {
+        return NULL;
+    }
+
+    return &session_table[session_id];
 }
 
 int get_phandle_from_session_table(int session_id){
@@ -56,4 +83,38 @@ char* get_pathname_from_session_table(int session_id){
         return NULL;
     }
     return session_table[session_id].client_pipe_path;
+}
+
+void session_init(int session_id){
+    if (!valid_session(session_id))
+        return;
+
+    session *s = &session_table[session_id];
+    s->buffer = NULL;
+    s->client_pipe = -1;
+    s->client_pipe_path = NULL;
+    s->fhandle = -1;
+    s->status = THREAD_STATUS_SLEEP;
+    s->session_id = session_id;
+    pthread_mutex_init(&s->lock, NULL);
+    pthread_cond_init(&s->cond, NULL);
+}
+
+void session_destroy(int session_id){
+    if (!valid_session(session_id))
+        return;
+
+    session *s = &session_table[session_id];
+    pthread_mutex_destroy(&s->lock);
+    pthread_cond_destroy(&s->cond);
+}
+
+int thread_mount(){
+	for (int i = 0; i < MAX_SESSION_IDS; i++) {
+        if (free_session_table[i] == FREE){
+            return i;
+        }
+
+    }
+    return -1;
 }

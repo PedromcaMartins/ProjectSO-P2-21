@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define MAX_SESSION_IDS 20
-#define FREE 1
-#define TAKEN 0
+#define MAX_SESSION_IDS 1
 
 // struct
 /*
@@ -21,7 +19,7 @@ typedef struct {
     int status;
     void *buffer;
     pthread_mutex_t lock;
-    pthread_cond_t cond; // utilizar o write_to_buffer pra escrever thread_*(int)(session)*
+    pthread_cond_t cond;
 
 } session;
 
@@ -30,8 +28,12 @@ bool valid_session(int pipe_file_handle);
 void session_table_init();
 int add_to_session_table(int client_pipe, char *client_pipe_path);
 int remove_from_session_table(int session_id);
+session *get_session(int session_id);
 int get_phandle_from_session_table(int session_id);
 char* get_pathname_from_session_table(int session_id);
+void session_init(int session_id);
+void session_destroy(int session_id);
+int thread_mount();
 
 
 #endif // SESSION_H

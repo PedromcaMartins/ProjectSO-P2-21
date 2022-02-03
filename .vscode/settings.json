@@ -13,6 +13,7 @@
         "typeinfo": "c",
         "session.h": "c",
         "types.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "common.h": "c"
     }
 }

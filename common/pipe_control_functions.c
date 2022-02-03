@@ -1,5 +1,5 @@
 #include "pipe_control_functions.h"
-// TODO: #9 fazer e testar funcoes pipe_read_buffer
+// TODO: #9 fazer e testar funcoes pipe_read
 
 int pipe_init(char const *pipe_pathname){
     // remove server pipe if it does not exist
@@ -88,7 +88,7 @@ int pipe_destroy(char const *pipe_pathname){
 
 // TODO: #8 improve the reading
 int pipe_read_int(int phandle){
-    void *buffer[sizeof(int)];
+    void *buffer[sizeof(int)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(int) + 1) == -1)
@@ -103,7 +103,7 @@ int pipe_read_int(int phandle){
 
 // TODO: #9 improve the writting
 int pipe_write_int(int phandle, int msg){
-    void *buffer[sizeof(int)];
+    void *buffer[sizeof(int)*2];
 
     // casts the buffer as an array and adds the integer to the array
     int *buffer_int = (int *)buffer;
@@ -121,7 +121,7 @@ int pipe_write_int(int phandle, int msg){
 }
 
 ssize_t pipe_read_ssize_t(int phandle){
-    void *buffer[sizeof(ssize_t)];
+    void *buffer[sizeof(ssize_t)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(ssize_t) + 1) == -1)
@@ -135,7 +135,7 @@ ssize_t pipe_read_ssize_t(int phandle){
 }
 
 int pipe_write_ssize_t(int phandle, ssize_t msg){
-    void *buffer[sizeof(ssize_t)];
+    void *buffer[sizeof(ssize_t)*2];
 
     // casts the buffer as an array and adds the integer to the array
     ssize_t *buffer_ssize_t = (ssize_t *)buffer;
@@ -151,7 +151,7 @@ int pipe_write_ssize_t(int phandle, ssize_t msg){
 }
 
 size_t pipe_read_size_t(int phandle){
-    void *buffer[sizeof(size_t)];
+    void *buffer[sizeof(size_t)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(size_t) + 1) == -1)
@@ -165,7 +165,7 @@ size_t pipe_read_size_t(int phandle){
 }
 
 int pipe_write_size_t(int phandle, size_t msg){
-    void *buffer[sizeof(size_t)];
+    void *buffer[sizeof(size_t)*2];
 
     // casts the buffer as an array and adds the integer to the array
     size_t *buffer_size_t = (size_t *)buffer;
@@ -180,46 +180,49 @@ int pipe_write_size_t(int phandle, size_t msg){
     return 0;
 }
 
-void pipe_read_buffer(void *buffer, size_t offset, void const *str, size_t len) {
+void buffer_read_char(void *buffer, size_t offset, void *str, size_t len) {
     len--;
 
-    memcpy(buffer + offset, str, len);
+    memcpy(str, buffer + offset, len);
 }
 
-int pipe_read_int_buffer(void *buffer, size_t offset){
-    // creates an array and adds the int to the array
+int buffer_read_int(void *buffer, size_t offset){
+    // creates an array
     int temp[1];
-    temp[0] = msg;
 
-    // saves the array containing the msg to the buffer
-    memcpy(buffer + offset, temp, sizeof(int));
+    // writes the buffer containing the msg to the array
+    memcpy(temp, buffer + offset, sizeof(int));
+
+    return temp[0];
 }
 
-size_t pipe_read_size_t_buffer(void *buffer, size_t offset){
-    // creates an array and adds the size_t to the array
+size_t buffer_read_size_t(void *buffer, size_t offset){
+    // creates an array
     size_t temp[1];
-    temp[0] = msg;
 
-    // saves the array containing the msg to the buffer
-    memcpy(buffer + offset, temp, sizeof(size_t));
+    // writes the buffer containing the msg to the array
+    memcpy(temp, buffer + offset, sizeof(size_t));
+
+    return temp[0];
 }
 
-ssize_t pipe_read_ssize_t_buffer(void *buffer, size_t offset){
-    // creates an array and adds the ssize_t to the array
+ssize_t buffer_read_ssize_t(void *buffer, size_t offset){
+    // creates an array
     ssize_t temp[1];
-    temp[0] = msg;
 
-    // saves the array containing the msg to the buffer
-    memcpy(buffer + offset, temp, sizeof(ssize_t));
+    // writes the buffer containing the msg to the array
+    memcpy(temp, buffer + offset, sizeof(ssize_t));
+
+    return temp[0];
 }
 
-void pipe_write_buffer(void *buffer, size_t offset, void const *str, size_t len) {
+void buffer_write_char(void *buffer, size_t offset, void const *str, size_t len) {
     len--;
 
     memcpy(buffer + offset, str, len);
 }
 
-void pipe_write_int_buffer(void *buffer, size_t offset, int msg){
+void buffer_write_int(void *buffer, size_t offset, int msg){
     // creates an array and adds the int to the array
     int temp[1];
     temp[0] = msg;
@@ -228,7 +231,7 @@ void pipe_write_int_buffer(void *buffer, size_t offset, int msg){
     memcpy(buffer + offset, temp, sizeof(int));
 }
 
-void pipe_write_size_t_buffer(void *buffer, size_t offset, size_t msg){
+void buffer_write_size_t(void *buffer, size_t offset, size_t msg){
     // creates an array and adds the size_t to the array
     size_t temp[1];
     temp[0] = msg;
@@ -237,7 +240,7 @@ void pipe_write_size_t_buffer(void *buffer, size_t offset, size_t msg){
     memcpy(buffer + offset, temp, sizeof(size_t));
 }
 
-void pipe_write_ssize_t_buffer(void *buffer, size_t offset, ssize_t msg){
+void buffer_write_ssize_t(void *buffer, size_t offset, ssize_t msg){
     // creates an array and adds the ssize_t to the array
     ssize_t temp[1];
     temp[0] = msg;
