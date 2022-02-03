@@ -1,4 +1,5 @@
 #include "pipe_control_functions.h"
+// TODO: #9 fazer e testar funcoes pipe_read_buffer
 
 int pipe_init(char const *pipe_pathname){
     // remove server pipe if it does not exist
