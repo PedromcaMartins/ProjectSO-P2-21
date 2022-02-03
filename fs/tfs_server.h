@@ -28,5 +28,14 @@ bool server_status = true;
 int server_init(char const *server_pipe_path);
 int server_destroy();
 int decode();
+void cntrlc_server();
+
+int request_thread_mount();
+int request_thread_unmount(int session_id);
+int request_thread_open(int session_id);
+int request_thread_close(int session_id);
+int request_thread_write(int session_id);
+int request_thread_read(int session_id);
+int request_thread_destroy(int session_id);
 
 #endif //TFS_SERVER_H
