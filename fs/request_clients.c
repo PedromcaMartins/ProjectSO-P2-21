@@ -29,7 +29,6 @@ int client_mount(void *input){
     return 0;
 }
 
-// TODO: #7 o que fazer no caso de erro?
 int client_unmount(int session_id){
     // gets the client's info
     int client_pipe = get_phandle_from_session_table(session_id);
@@ -116,7 +115,7 @@ int client_write(int session_id, void *input){
     char buffer[len];
     buffer_read_char(input, offset, buffer, len);
     offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
-    buffer[len] = 0;
+    buffer[len-1] = 0;
     printf("%s\n", buffer);
 
     ssize_t res = tfs_write(fhandle, buffer, len);
