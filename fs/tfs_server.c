@@ -46,36 +46,29 @@ int request_thread_mount(){
     return 0;
 }
 
-// TODO: #7 o que fazer no caso de erro?
 int request_thread_unmount(int session_id){
-    // gets the client's info
-    int client_pipe = get_phandle_from_session_table(session_id);
-    char *client_pathname = get_pathname_from_session_table(session_id);
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
 
-    // unregisters the client's session_id
-    if (remove_from_session_table(session_id) == -1){
-        // if gone wrong, returns an error message
-        pipe_write_int(client_pipe, -1);
-        return -1;
-    }
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_UNMOUNT);
+    offset += sizeof(int);
 
-    // sends SUCCESS message to the client
-    if (pipe_write_int(client_pipe, 0) == -1)
-        return -1;
-
-    // closes the client's pipe, resuming the execution it's code
-    if (pipe_close(client_pipe) == -1)
-        return -1;
-    
-    // destroys the client's pipe
-    if(pipe_destroy(client_pathname) == -1)
-        return -1;
+    // thread executes client_unmount();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
 
     return 0;
 }
 
 int request_thread_open(int session_id){
-    printf("%d\t", session_id);
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_OPEN);
+    offset += sizeof(int);
 
     char name[MAX_SIZE_PATHNAME];
     ssize_t ret = pipe_read(server_pipe, name, MAX_SIZE_PATHNAME);
@@ -83,87 +76,98 @@ int request_thread_open(int session_id){
         server_destroy();
         return -1;
     }
-    printf("%s\t", name);
+
+    // writes the client's request to the thread's buffer
+    buffer_write_char(thread_buffer, offset, name, MAX_SIZE_PATHNAME - 1);
+    offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
     int flags = pipe_read_int(server_pipe);
-    printf("%d\n", flags);
 
-    int fhandle = tfs_open(name, flags);
+    buffer_write_int(thread_buffer, offset, flags);
+    offset += sizeof(int);
 
-    // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_session_table(session_id);
+    // thread executes client_open();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
 
-    // write the server's response
-    pipe_write_int(client_pipe, fhandle);
     return 0;
 }
 
 int request_thread_close(int session_id){
-    printf("%d\t", session_id);
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_CLOSE);
+    offset += sizeof(int);
 
     int fhandle = pipe_read_int(server_pipe);
-    printf("%d\n", fhandle);
 
-    int sucess = tfs_close(fhandle);
+    buffer_write_int(thread_buffer, offset, fhandle);
+    offset += sizeof(int);
 
-    // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_session_table(session_id);
-
-    // write the server's response
-    pipe_write_int(client_pipe, sucess);
+    // thread executes client_close();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
     
     return 0;
 }
 
 int request_thread_write(int session_id){
-    printf("%d\t", session_id);
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_WRITE);
+    offset += sizeof(int);
 
     int fhandle = pipe_read_int(server_pipe);
-    printf("%d\t", fhandle);
+
+    buffer_write_int(thread_buffer, offset, fhandle);
+    offset += sizeof(int);
 
     size_t len = pipe_read_size_t(server_pipe);
-    printf("%ld\t", len);
+
+    buffer_write_size_t(thread_buffer, offset, len);
+    offset += sizeof(size_t);
 
     char buffer[len];
     ssize_t ret = pipe_read(server_pipe, buffer, len);
     if (ret == 0)
         return -1;
-    buffer[ret] = 0;
-    printf("%s\n", buffer);
+    buffer[ret] = '\0';
 
-    ssize_t res = tfs_write(fhandle, buffer, len);
-    res--;
+    // writes the client's request to the thread's buffer
+    buffer_write_char(thread_buffer, offset, buffer, len);
+    offset += sizeof(char) * (len);
 
-    // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_session_table(session_id);
-
-    // write the server's response
-    pipe_write_ssize_t(client_pipe, res);
+    // thread executes client_write();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
 
     return 0;
 }
 
 int request_thread_read(int session_id){
-    printf("%d\t", session_id);
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_READ);
+    offset += sizeof(int);
 
     int fhandle = pipe_read_int(server_pipe);
-    printf("%d\t", fhandle);
+
+    buffer_write_int(thread_buffer, offset, fhandle);
+    offset += sizeof(int);
 
     size_t len = pipe_read_size_t(server_pipe);
-    printf("%ld\n", len);
 
-    // TODO: adicinoar funcao tfs_read();
-    char buffer[len];
-    ssize_t res = tfs_read(fhandle, buffer, len);
+    buffer_write_size_t(thread_buffer, offset, len);
+    offset += sizeof(size_t);
 
-    // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_session_table(session_id);
-
-    // write the server's response
-    pipe_write_ssize_t(client_pipe, res);
-    if (res == -1)
-        return -1;
-    pipe_write(client_pipe, buffer, (size_t)(res));
+    // thread executes client_read();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
     
     return 0;
 }
@@ -254,12 +258,10 @@ int decode(){
 
     switch (command){
     case TFS_OP_CODE_MOUNT:
-        printf("CASE 1\n");
         request_thread_mount();
         break;
 
     case TFS_OP_CODE_UNMOUNT:
-        printf("CASE 2\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
@@ -267,7 +269,6 @@ int decode(){
         break;
 
     case TFS_OP_CODE_OPEN:
-        printf("CASE 3\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
@@ -275,7 +276,6 @@ int decode(){
         break;
 
     case TFS_OP_CODE_CLOSE:
-        printf("CASE 4\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
@@ -283,7 +283,6 @@ int decode(){
         break;
 
     case TFS_OP_CODE_WRITE:
-        printf("CASE 5\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
@@ -291,7 +290,6 @@ int decode(){
         break;
 
     case TFS_OP_CODE_READ:
-        printf("CASE 6\n");
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
