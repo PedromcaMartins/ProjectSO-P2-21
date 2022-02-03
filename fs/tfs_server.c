@@ -1,115 +1,23 @@
-#include "operations.h"
-#include "session.h"
-#include "common/pipe_control_functions.h"
-#include "common/common.h"
+#include "tfs_server.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+//fixme! remove
+int request_thread_mount();
+int request_thread_unmount(int session_id);
+int request_thread_open(int session_id);
+int request_thread_close(int session_id);
+int request_thread_write(int session_id);
+int request_thread_read(int session_id);
+int request_thread_destroy(int session_id);
 
-#define MAX_SIZE_PATHNAME 40
+int request_thread_mount(){
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
 
-// variaveis globais
-int server_pipe;
-char *server_pipename;
-bool server_status = true;
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_MOUNT);
+    offset += sizeof(int);
 
-// prototipos
-int server_init(char const *server_pipe_path);
-int server_destroy();
-int decode();
-
-int client_mount();
-int client_unmount(int session_id);
-int client_open(int session_id);
-int client_close(int session_id);
-int client_write(int session_id);
-int client_read(int session_id);
-int client_destroy(int session_id);
-
-
-int main(int argc, char **argv) {
-
-    if (argc < 2) {
-        printf("Please specify the pathname of the server's pipe.\n");
-        return 1;
-    }
-
-    server_pipename = argv[1];
-    printf("Starting TecnicoFS server with pipe called %s\n", server_pipename);
-
-    
-    //initializes the server
-    assert(server_init(server_pipename) != -1);
-
-    while (decode() != -1 && server_status == true) {}
-
-    printf("[INFO] Server destroyed\n");
-
-    return 0;
-}
-
-
-
-int server_init(char const *server_pipe_path) {
-    // creates open pipe table
-    session_table_init();
-    if (tfs_init() == -1)
-        return -1;
-
-    // creates server pipe (self)
-    if (pipe_init(server_pipe_path) == -1)
-        return -1;
-
-    // open self pipe for reading
-    server_pipe = pipe_open(server_pipe_path, O_RDONLY);
-
-    if (server_pipe == -1)
-        return -1;
-
-    return 0;
-}
-
-int server_destroy(){
-    server_status = false;
-
-    // TODO: add functionality to wait until all pipes are closed except one
-    // TODO: every error until here is reported back to the client w/ -1
-
-    return tfs_destroy_after_all_closed();
-}
-
-int client_destroy(int session_id){
-    // destroys the server
-    if (server_destroy() == -1)
-        return -1;
-
-    // closes the client's pipe
-    if (client_unmount(session_id) == -1)
-        return -1;
-
-    // closes the server's pipe
-    if (pipe_close(server_pipe) == -1)
-        return -1;
-
-    //destroys the server's pipe
-    if (pipe_destroy(server_pipename) == -1)
-        return -1;
-
-    printf("[INFO] server destroyed\n");
-
-    return 0;
-}
-
-int client_mount(){
     // reads the client's pathname from the server's pipe
     char client_pipe_path[MAX_SIZE_PATHNAME];
     ssize_t ret = pipe_read(server_pipe, client_pipe_path, MAX_SIZE_PATHNAME);
@@ -118,29 +26,28 @@ int client_mount(){
         return -1;
     }
 
-    // opens client's pipe for writting
-    int client_pipe = pipe_open(client_pipe_path, O_WRONLY);
-    if (client_pipe == -1)
-        return -1;
+    // writes the client's request to the thread's buffer
+    buffer_write_char(thread_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME - 1);
+    offset += sizeof(char) * (MAX_SIZE_PATHNAME - 1);
 
-    // tries to save the client's pipe
-    int session_id = add_to_session_table(client_pipe, client_pipe_path);
+    int session_id = thread_mount();
     if (session_id == -1){
+        int client_pipe = pipe_open(client_pipe_path, O_WRONLY);
+        if (client_pipe == -1)
+            return -1;
+
         // the aren't more sessions avaiable
         pipe_write_int(client_pipe, -1);
         return -1;
     }
+    // thread executes client_mount();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
 
-    // writes to the client the amount of bytes read
-    if (pipe_write_int(client_pipe, session_id) == -1)
-        return -1;
-
-    // returns the client's pipe
     return 0;
 }
 
 // TODO: #7 o que fazer no caso de erro?
-int client_unmount(int session_id){
+int request_thread_unmount(int session_id){
     // gets the client's info
     int client_pipe = get_phandle_from_session_table(session_id);
     char *client_pathname = get_pathname_from_session_table(session_id);
@@ -167,7 +74,7 @@ int client_unmount(int session_id){
     return 0;
 }
 
-int client_open(int session_id){
+int request_thread_open(int session_id){
     printf("%d\t", session_id);
 
     char name[MAX_SIZE_PATHNAME];
@@ -191,7 +98,7 @@ int client_open(int session_id){
     return 0;
 }
 
-int client_close(int session_id){
+int request_thread_close(int session_id){
     printf("%d\t", session_id);
 
     int fhandle = pipe_read_int(server_pipe);
@@ -208,7 +115,7 @@ int client_close(int session_id){
     return 0;
 }
 
-int client_write(int session_id){
+int request_thread_write(int session_id){
     printf("%d\t", session_id);
 
     int fhandle = pipe_read_int(server_pipe);
@@ -236,7 +143,7 @@ int client_write(int session_id){
     return 0;
 }
 
-int client_read(int session_id){
+int request_thread_read(int session_id){
     printf("%d\t", session_id);
 
     int fhandle = pipe_read_int(server_pipe);
@@ -261,6 +168,86 @@ int client_read(int session_id){
     return 0;
 }
 
+int request_thread_destroy(int session_id){
+    // destroys the server
+    if (server_destroy() == -1)
+        return -1;
+
+    // closes the client's pipe
+    if (client_unmount(session_id) == -1)
+        return -1;
+
+    // closes the server's pipe
+    if (pipe_close(server_pipe) == -1)
+        return -1;
+
+    //destroys the server's pipe
+    if (pipe_destroy(server_pipename) == -1)
+        return -1;
+
+    printf("[INFO] server destroyed\n");
+
+    return 0;
+}
+
+
+//fixme! remove
+
+int main(int argc, char **argv) {
+
+    if (argc < 2) {
+        printf("Please specify the pathname of the server's pipe.\n");
+        return 1;
+    }
+
+    server_pipename = argv[1];
+    printf("Starting TecnicoFS server with pipe called %s\n", server_pipename);
+
+    
+    //initializes the server
+    assert(server_init(server_pipename) != -1);
+
+    while (decode() != -1 && server_status == true) {}
+
+    printf("[INFO] Server destroyed\n");
+
+    return 0;
+}
+
+int server_init(char const *server_pipe_path) {
+    // creates open pipe table
+    session_table_init();
+    if (tfs_init() == -1)
+        return -1;
+
+    // creates server pipe (self)
+    if (pipe_init(server_pipe_path) == -1)
+        return -1;
+
+    // open self pipe for reading
+    server_pipe = pipe_open(server_pipe_path, O_RDONLY);
+
+    if (server_pipe == -1)
+        return -1;
+
+    return 0;
+}
+
+int server_destroy(){
+    // closes the server's pipe
+    if (pipe_close(server_pipe) == -1)
+        return -1;
+
+    //destroys the server's pipe
+    if (pipe_destroy(server_pipename) == -1)
+        return -1;
+
+    // TODO: add functionality to wait until all pipes are closed except one
+    // TODO: every error until here is reported back to the client w/ -1
+
+    return tfs_destroy_after_all_closed();
+}
+
 int decode(){
     int session_id;
     int command = pipe_read_int(server_pipe);
@@ -268,7 +255,7 @@ int decode(){
     switch (command){
     case TFS_OP_CODE_MOUNT:
         printf("CASE 1\n");
-        client_mount();
+        request_thread_mount();
         break;
 
     case TFS_OP_CODE_UNMOUNT:
@@ -276,7 +263,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_unmount(session_id);
+        request_thread_unmount(session_id);
         break;
 
     case TFS_OP_CODE_OPEN:
@@ -284,7 +271,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_open(session_id);
+        request_thread_open(session_id);
         break;
 
     case TFS_OP_CODE_CLOSE:
@@ -292,7 +279,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_close(session_id);
+        request_thread_close(session_id);
         break;
 
     case TFS_OP_CODE_WRITE:
@@ -300,7 +287,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_write(session_id);
+        request_thread_write(session_id);
         break;
 
     case TFS_OP_CODE_READ:
@@ -308,7 +295,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_read(session_id);
+        request_thread_read(session_id);
         break;
 
     case TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED:
@@ -316,7 +303,7 @@ int decode(){
         session_id = pipe_read_int(server_pipe);
         if (session_id == -1) // rebentar o server
             server_destroy();
-        client_destroy(session_id);
+        request_thread_destroy(session_id);
         break;
 
     default:
