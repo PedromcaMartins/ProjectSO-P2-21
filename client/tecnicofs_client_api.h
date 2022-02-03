@@ -81,4 +81,6 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len);
  */
 int tfs_shutdown_after_all_closed();
 
+void cntrlc_client();
+
 #endif /* CLIENT_API_H */

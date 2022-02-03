@@ -10,6 +10,7 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     if (pipe_init(client_pipe_path) == -1)
         return -1;
 
+    signal (SIGINT, cntrlc_client);
     // open server pipe for writing
     server_pipe = pipe_open(server_pipe_path, O_WRONLY);
     if (server_pipe == -1)
@@ -38,6 +39,7 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     session_id = pipe_read_int(client_pipe);
     if (session_id == -1)
         return -1;
+    signal(SIGPIPE, SIG_IGN);
     return 0;
 }
 
@@ -191,4 +193,10 @@ int tfs_shutdown_after_all_closed(){
 
     // returns the server's response
     return pipe_read_int(client_pipe);
+}
+
+void cntrlc_client(){
+    if (session_id != -1)
+        tfs_unmount();
+    exit(0);
 }

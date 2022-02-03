@@ -1,6 +1,10 @@
 #include "tfs_server.h"
 
-//fixme! remove
+// prototipos
+int server_init(char const *server_pipe_path);
+int server_destroy();
+int decode();
+
 int request_thread_mount();
 int request_thread_unmount(int session_id);
 int request_thread_open(int session_id);
@@ -8,6 +12,7 @@ int request_thread_close(int session_id);
 int request_thread_write(int session_id);
 int request_thread_read(int session_id);
 int request_thread_destroy(int session_id);
+void cntrlc_server();
 
 int request_thread_mount(){
     // creates the buffer to write to the thread's buffer
@@ -195,7 +200,6 @@ int request_thread_destroy(int session_id){
 }
 
 
-//fixme! remove
 
 int main(int argc, char **argv) {
 
@@ -210,6 +214,9 @@ int main(int argc, char **argv) {
     
     //initializes the server
     assert(server_init(server_pipename) != -1);
+  
+    signal (SIGINT, cntrlc_server);
+    signal(SIGPIPE, SIG_IGN);
 
     while (decode() != -1 && server_status == true) {}
 
@@ -250,6 +257,12 @@ int server_destroy(){
     // TODO: every error until here is reported back to the client w/ -1
 
     return tfs_destroy_after_all_closed();
+}
+
+void cntrlc_server(){
+    printf("Destroying_server\n");
+    server_destroy();
+    exit(0);
 }
 
 int decode(){
@@ -303,7 +316,10 @@ int decode(){
             server_destroy();
         request_thread_destroy(session_id);
         break;
-
+    case TFS_OP_CODE_SERVER_PIPE_CLOSED:
+        server_destroy();
+        return -1;
+        break;
     default:
         return -1;
         break;
