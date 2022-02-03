@@ -42,6 +42,13 @@ ssize_t pipe_read_ssize_t(int phandle);
 int pipe_write_ssize_t(int phandle, ssize_t msg);
 
 
+// reads from the buffer
+void pipe_read_buffer(void *buffer, size_t offset, void const *str, size_t len);
+int pipe_read_int_buffer(void *buffer, size_t offset);
+size_t pipe_read_size_t_buffer(void *buffer, size_t offset);
+ssize_t pipe_read_ssize_t_buffer(void *buffer, size_t offset);
+
+
 // writes to the buffer
 void pipe_write_buffer(void *buffer, size_t offset, void const *str, size_t len);
 void pipe_write_int_buffer(void *buffer, size_t offset, int msg);

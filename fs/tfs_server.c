@@ -1,5 +1,5 @@
 #include "operations.h"
-#include "open_pipe.h"
+#include "session.h"
 #include "common/pipe_control_functions.h"
 #include "common/common.h"
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
 int server_init(char const *server_pipe_path) {
     // creates open pipe table
-    open_pipe_table_init();
+    session_table_init();
     if (tfs_init() == -1)
         return -1;
 
@@ -128,7 +128,7 @@ int client_mount(){
         return -1;
 
     // tries to save the client's pipe
-    int session_id = add_to_open_pipe_table(client_pipe, client_pipe_path);
+    int session_id = add_to_session_table(client_pipe, client_pipe_path);
     if (session_id == -1){
         // the aren't more sessions avaiable
         pipe_write_int(client_pipe, -1);
@@ -146,11 +146,11 @@ int client_mount(){
 // TODO: #7 o que fazer no caso de erro?
 int client_unmount(int session_id){
     // gets the client's info
-    int client_pipe = get_phandle_from_open_pipe_table(session_id);
-    char *client_pathname = get_pathname_from_open_pipe_table(session_id);
+    int client_pipe = get_phandle_from_session_table(session_id);
+    char *client_pathname = get_pathname_from_session_table(session_id);
 
     // unregisters the client's session_id
-    if (remove_from_open_pipe_table(session_id) == -1){
+    if (remove_from_session_table(session_id) == -1){
         // if gone wrong, returns an error message
         pipe_write_int(client_pipe, -1);
         return -1;
@@ -188,7 +188,7 @@ int client_open(int session_id){
     int fhandle = tfs_open(name, flags);
 
     // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_open_pipe_table(session_id);
+    int client_pipe = get_phandle_from_session_table(session_id);
 
     // write the server's response
     pipe_write_int(client_pipe, fhandle);
@@ -204,7 +204,7 @@ int client_close(int session_id){
     int sucess = tfs_close(fhandle);
 
     // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_open_pipe_table(session_id);
+    int client_pipe = get_phandle_from_session_table(session_id);
 
     // write the server's response
     pipe_write_int(client_pipe, sucess);
@@ -232,7 +232,7 @@ int client_write(int session_id){
     res--;
 
     // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_open_pipe_table(session_id);
+    int client_pipe = get_phandle_from_session_table(session_id);
 
     // write the server's response
     pipe_write_ssize_t(client_pipe, res);
@@ -254,7 +254,7 @@ int client_read(int session_id){
     ssize_t res = tfs_read(fhandle, buffer, len);
 
     // writes to the client SUCCESS!
-    int client_pipe = get_phandle_from_open_pipe_table(session_id);
+    int client_pipe = get_phandle_from_session_table(session_id);
 
     // write the server's response
     pipe_write_ssize_t(client_pipe, res);
