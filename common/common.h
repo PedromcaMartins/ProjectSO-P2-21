@@ -10,6 +10,14 @@ enum {
     TFS_O_APPEND = 0b100,
 };
 
+/* thread states */
+enum {
+    THREAD_STATUS_SLEEP = 0b001,
+    THREAD_STATUS_ACTIVE = 0b010,
+    THREAD_STATUS_ERROR = 0b011,
+    THREAD_STATUS_DESTROY = 0b100,
+};
+
 /* operation codes (for client-server requests) */
 enum {
     TFS_OP_CODE_MOUNT = 1,
