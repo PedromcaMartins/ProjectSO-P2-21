@@ -88,7 +88,7 @@ int pipe_destroy(char const *pipe_pathname){
 
 // TODO: #8 improve the reading
 int pipe_read_int(int phandle){
-    void *buffer[sizeof(int)];
+    void *buffer[sizeof(int)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(int) + 1) == -1)
@@ -103,7 +103,7 @@ int pipe_read_int(int phandle){
 
 // TODO: #9 improve the writting
 int pipe_write_int(int phandle, int msg){
-    void *buffer[sizeof(int)];
+    void *buffer[sizeof(int)*2];
 
     // casts the buffer as an array and adds the integer to the array
     int *buffer_int = (int *)buffer;
@@ -121,7 +121,7 @@ int pipe_write_int(int phandle, int msg){
 }
 
 ssize_t pipe_read_ssize_t(int phandle){
-    void *buffer[sizeof(ssize_t)];
+    void *buffer[sizeof(ssize_t)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(ssize_t) + 1) == -1)
@@ -135,7 +135,7 @@ ssize_t pipe_read_ssize_t(int phandle){
 }
 
 int pipe_write_ssize_t(int phandle, ssize_t msg){
-    void *buffer[sizeof(ssize_t)];
+    void *buffer[sizeof(ssize_t)*2];
 
     // casts the buffer as an array and adds the integer to the array
     ssize_t *buffer_ssize_t = (ssize_t *)buffer;
@@ -151,7 +151,7 @@ int pipe_write_ssize_t(int phandle, ssize_t msg){
 }
 
 size_t pipe_read_size_t(int phandle){
-    void *buffer[sizeof(size_t)];
+    void *buffer[sizeof(size_t)*2];
 
     // write the int to the pipe
     if (pipe_read(phandle, buffer, sizeof(size_t) + 1) == -1)
@@ -165,7 +165,7 @@ size_t pipe_read_size_t(int phandle){
 }
 
 int pipe_write_size_t(int phandle, size_t msg){
-    void *buffer[sizeof(size_t)];
+    void *buffer[sizeof(size_t)*2];
 
     // casts the buffer as an array and adds the integer to the array
     size_t *buffer_size_t = (size_t *)buffer;
