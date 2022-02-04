@@ -4,6 +4,7 @@
 #include "common/common.h"
 #include "common/pipe_control_functions.h"
 #include <sys/types.h>
+#include <pthread.h>
 
 #define MAX_SIZE_PATHNAME 40
 

@@ -5,7 +5,11 @@ int server_pipe;
 int client_pipe;
 int session_id = -1;
 
+pthread_mutex_t pipe_lock;
+
 int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
+    pthread_mutex_init(&pipe_lock, NULL);
+
     // creates it's pipe (self)
     if (pipe_init(client_pipe_path) == -1)
         return -1;
@@ -27,8 +31,12 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     offset += sizeof(char) * MAX_SIZE_PATHNAME;
 
     // requests the server to mount the client to the server using the server's pipe
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // open self pipe for reading
     client_pipe = pipe_open(client_pipe_path, O_RDONLY);
@@ -55,8 +63,12 @@ int tfs_unmount(){
     offset += sizeof(int);
 
     //resquests the server to unmount the client
-    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // reads the server's response
     if (pipe_read_int(client_pipe) == -1)
@@ -88,8 +100,12 @@ int tfs_open(char const *name, int flags){
     offset += sizeof(int);
 
     // writes to the server the the requests
-    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // returns the server's response
     return pipe_read_int(client_pipe);
@@ -109,8 +125,12 @@ int tfs_close(int fhandle){
     buffer_write_int(pipe_buffer, offset, fhandle);
     offset += sizeof(int);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // returns the server's response
     return pipe_read_int(client_pipe);
@@ -137,8 +157,12 @@ ssize_t tfs_write(int fhandle, void const *buffer, size_t len){
     buffer_write_char(pipe_buffer, offset, buffer, len);
     offset += sizeof(char) * len;
 
-    if (pipe_write(server_pipe, pipe_buffer, offset) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // returns the server's response
     return pipe_read_ssize_t(client_pipe);
@@ -161,8 +185,12 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len){
     buffer_write_size_t(pipe_buffer, offset, len);
     offset += sizeof(size_t);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // returns the server's response
     ssize_t read = pipe_read_ssize_t(client_pipe);
@@ -184,8 +212,12 @@ int tfs_shutdown_after_all_closed(){
     buffer_write_int(pipe_buffer, offset, session_id);
     offset += sizeof(int);
 
-    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1)
+    pthread_mutex_lock(&pipe_lock);
+    if (pipe_write(server_pipe, pipe_buffer, offset+1) == -1){
+        pthread_mutex_unlock(&pipe_lock);
         return -1;
+    }
+    pthread_mutex_unlock(&pipe_lock);
 
     // returns the server's response
     int res = pipe_read_int(client_pipe);
@@ -198,7 +230,8 @@ int tfs_shutdown_after_all_closed(){
 }
 
 void cntrlc_client(){
-    if (session_id != -1)
+    if (session_id != -1){
         tfs_unmount();
-    exit(0);
+        pipe_close(client_pipe);
+    }
 }
