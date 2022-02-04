@@ -172,14 +172,6 @@ int request_thread_destroy(int session_id){
     if (client_unmount(session_id) == -1)
         return -1;
 
-    // closes the server's pipe
-    if (pipe_close(server_pipe) == -1)
-        return -1;
-
-    //destroys the server's pipe
-    if (pipe_destroy(server_pipename) == -1)
-        return -1;
-
     printf("[INFO] server destroyed\n");
 
     return 0;

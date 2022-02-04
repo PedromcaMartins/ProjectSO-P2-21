@@ -15,8 +15,9 @@ void *thread_execute(void *arg){
     int session_id = buffer_read_int(arg, 0);
 
     session *s = get_session(session_id);
+	pthread_mutex_lock(&s->lock);
+
 	while (1){	
-		pthread_mutex_lock(&s->lock);
 		while (s->status == THREAD_STATUS_SLEEP){
 			pthread_cond_wait(&s->cond, &s->lock);
 		}
