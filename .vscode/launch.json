@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["/tmp/server"],
+            "args": ["/tmp/tfs_server"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
