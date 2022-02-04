@@ -194,11 +194,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    server_pipename = argv[1];
-    printf("Starting TecnicoFS server with pipe called %s\n", server_pipename);
+    server_pipe_path = argv[1];
+    printf("Starting TecnicoFS server with pipe called %s\n", server_pipe_path);
 
     //initializes the server
-    assert(server_init(server_pipename) != -1);
+    assert(server_init() != -1);
 
     signal(SIGINT, cntrlc_server);
     signal(SIGPIPE, SIG_IGN);
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int server_init(char const *server_pipe_path) {
+int server_init() {
     // creates open pipe table
     session_table_init();
     if (tfs_init() == -1)
@@ -302,8 +302,8 @@ int decode(){
         request_thread_destroy(session_id);
         break;
     case TFS_OP_CODE_SERVER_PIPE_CLOSED:
-        server_destroy();
-        return -1;
+        pipe_close(server_pipe);
+        pipe_open(server_pipe_path, O_RDONLY);
         break;
     default:
         return -1;

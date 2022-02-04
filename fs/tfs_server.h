@@ -22,10 +22,11 @@
 // variaveis globais
 int server_pipe;
 char *server_pipename;
+char const *server_pipe_path;
 bool server_status = true;
 
 // prototipos
-int server_init(char const *server_pipe_path);
+int server_init();
 int server_destroy();
 int decode();
 void cntrlc_server();

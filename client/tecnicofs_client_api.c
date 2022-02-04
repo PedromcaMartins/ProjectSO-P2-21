@@ -62,10 +62,6 @@ int tfs_unmount(){
     if (pipe_read_int(client_pipe) == -1)
         return -1;
 
-    // closes the server's pipe
-    if(pipe_close(server_pipe) == -1)
-        return -1;
-
     // closes the client's pipe
     if(pipe_close(client_pipe) == -1)
         return -1;
@@ -192,7 +188,13 @@ int tfs_shutdown_after_all_closed(){
         return -1;
 
     // returns the server's response
-    return pipe_read_int(client_pipe);
+    int res = pipe_read_int(client_pipe);
+
+    // closes the server's pipe
+    if(pipe_close(server_pipe) == -1)
+        return -1;
+
+    return res;
 }
 
 void cntrlc_client(){
