@@ -57,3 +57,4 @@ tests/simple_client
 tests/lib_destroy_after_all_closed_test
 tests/client_server_simple_test
 fs/tfs_server
+tests/client_server_simple_test_modified

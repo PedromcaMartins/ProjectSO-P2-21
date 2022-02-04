@@ -232,6 +232,6 @@ int tfs_shutdown_after_all_closed(){
 void cntrlc_client(){
     if (session_id != -1){
         tfs_unmount();
-        pipe_close(client_pipe);
     }
+    exit(0);
 }

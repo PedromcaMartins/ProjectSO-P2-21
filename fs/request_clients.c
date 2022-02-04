@@ -153,10 +153,6 @@ int client_read(int session_id, void *input){
 }
 
 int client_destroy(int session_id){
-    // destroys the server
-    /*if (server_destroy() == -1)   FIXME
-        return -1;*/
-
     // closes the client's pipe
     if (client_unmount(session_id) == -1)
         return -1;

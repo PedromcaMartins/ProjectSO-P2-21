@@ -164,14 +164,20 @@ int request_thread_read(int session_id){
 }
 
 int request_thread_destroy(int session_id){
+    // creates the buffer to write to the thread's buffer
+    void *thread_buffer[MAX_BUFFER_SIZE];
+    size_t offset = 0;
+
+    // writes op_code
+    buffer_write_int(thread_buffer, offset, TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED);
+    offset += sizeof(int);
+
+    // thread executes client_tfs_shutdown_after_all_closed();
+    thread_status(session_id, THREAD_STATUS_ACTIVE, thread_buffer);
+
     // destroys the server
     if (server_destroy() == -1)
         return -1;
-
-    // closes the client's pipe
-    if (client_unmount(session_id) == -1)
-        return -1;
-
     printf("[INFO] server destroyed\n");
 
     return 0;
@@ -227,11 +233,8 @@ int server_destroy(){
         return -1;
 
     //destroys the server's pipe
-    if (pipe_destroy(server_pipename) == -1)
+    if (pipe_destroy(server_pipe_path) == -1)
         return -1;
-
-    // TODO: add functionality to wait until all pipes are closed except one
-    // TODO: every error until here is reported back to the client w/ -1
 
     return tfs_destroy_after_all_closed();
 }
@@ -293,10 +296,12 @@ int decode(){
             server_destroy();
         request_thread_destroy(session_id);
         break;
+
     case TFS_OP_CODE_SERVER_PIPE_CLOSED:
         pipe_close(server_pipe);
         pipe_open(server_pipe_path, O_RDONLY);
         break;
+
     default:
         return -1;
         break;
