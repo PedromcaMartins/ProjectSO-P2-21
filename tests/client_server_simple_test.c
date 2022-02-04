@@ -26,14 +26,19 @@ int main(int argc, char **argv) {
     }
 */
     /*assert(tfs_mount(argv[1], argv[2]) == 0);*/
-    printf("%s\n", argv[1]);
     assert(tfs_mount(argv[1], "/tmp/tfs_server") == 0);
+
+    sleep(2);
 
     f = tfs_open(path, TFS_O_CREAT);
     assert(f != -1);
 
+    sleep(2);
+
     r = tfs_write(f, str, strlen(str));
     assert(r == strlen(str));
+
+    sleep(2);
 
     assert(tfs_close(f) != -1);
 
@@ -42,13 +47,21 @@ int main(int argc, char **argv) {
     f = tfs_open(path, 0);
     assert(f != -1);
 
+    sleep(2);
+
     r = tfs_read(f, buffer, sizeof(buffer) - 1);
     assert(r == strlen(str));
+
+    sleep(2);
 
     buffer[r] = '\0';
     assert(strcmp(buffer, str) == 0);
 
+    sleep(2);
+
     assert(tfs_close(f) != -1);
+
+    sleep(2);
 
     assert(tfs_unmount() == 0);
 

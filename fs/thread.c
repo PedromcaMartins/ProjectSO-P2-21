@@ -20,7 +20,6 @@ void *thread_execute(void *arg){
 		while (s->status == THREAD_STATUS_SLEEP){
 			pthread_cond_wait(&s->cond, &s->lock);
 		}
-		pthread_mutex_unlock(&s->lock);
 
 		if (s->status == THREAD_STATUS_ERROR){
 			session_destroy(session_id);
@@ -44,6 +43,7 @@ void *thread_execute(void *arg){
 
 			case TFS_OP_CODE_UNMOUNT:
 				printf("THREAD %d CASE 2\n", s->session_id);
+				pthread_mutex_unlock(&s->lock);
 				client_unmount(s->session_id);
 				break;
 
@@ -69,6 +69,7 @@ void *thread_execute(void *arg){
 
 			case TFS_OP_CODE_SHUTDOWN_AFTER_ALL_CLOSED:
 				printf("THREAD %d CASE 7\n", s->session_id);
+				pthread_mutex_unlock(&s->lock);
 				client_destroy(s->session_id);
 				break;
 
@@ -76,9 +77,13 @@ void *thread_execute(void *arg){
 				return NULL;
 				break;
 			}
-			pthread_mutex_lock(&s->lock);
+
+			if (s->status != THREAD_STATUS_ACTIVE)
+				break;
+
 			pthread_cond_wait(&s->cond, &s->lock);
 			pthread_mutex_unlock(&s->lock);
+			pthread_mutex_lock(&s->lock);
 		}
 	}
 
