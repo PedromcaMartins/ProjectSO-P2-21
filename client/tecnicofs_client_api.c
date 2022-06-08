@@ -30,6 +30,7 @@ int tfs_mount(char const *client_pipe_path, char const *server_pipe_path){
     buffer_write_char(pipe_buffer, offset, client_pipe_path, MAX_SIZE_PATHNAME);
     offset += sizeof(char) * MAX_SIZE_PATHNAME;
 
+    // FIXME #13
     // requests the server to mount the client to the server using the server's pipe
     pthread_mutex_lock(&pipe_lock);
     if (pipe_write(server_pipe, pipe_buffer, offset) == -1){
